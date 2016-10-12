@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="es">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+      <!-- Leaflet 0.5: https://github.com/CloudMade/Leaflet-->
+		<link rel="stylesheet" href="lib/leaflet.css" />
+		<!--[if lte IE 8]> <link rel="stylesheet" href="../../lib/leaflet.ie.css" />  <![endif]-->  
+		<script src="lib/leaflet.js"></script>
+
+		<!-- MarkerCluster https://github.com/danzel/Leaflet.markercluster -->
+		<link rel="stylesheet" href="lib/MarkerCluster.css" />
+		<link rel="stylesheet" href="lib/MarkerCluster.Default.css" />
+		<!--[if lte IE 8]> <link rel="stylesheet" href="../../lib/MarkerCluster.Default.ie.css" /> <![endif]-->
+		<script src="lib/leaflet.markercluster-src.js"></script>
+
+		<!-- GeoCSV: https://github.com/joker-x/Leaflet.geoCSV -->
+		<script src="leaflet-heat.js"></script>
+
+
+		<script src="leaflet.geocsv-src.js"></script>
+
+		<!-- jQuery 1.8.3: http://jquery.com/ -->
+		<script src="lib/jquery.js"></script>
+
+		<style>	
+		html, body, #mapa {
+			margin: 0;
+			padding: 0;
+			width: 100%;
+			height: 100%;	
+			font-family: Arial, sans-serif;
+			font-color: #38383;
+		}
+		#botonera {
+			position:fixed;
+			top:10px;
+			left:50px;
+			z-index: 2;
+		}
+		#cargando {
+			position:fixed;
+			top:0;
+			left:0;
+			width:100%;
+			height:100%;
+			background-color:#666;
+			color:#fff;
+			font-size:2em;
+			padding:20% 40%;
+			z-index:10;
+		}
+		.boton {
+			border: 1px solid #96d1f8;
+			background: #65a9d7;
+			background: -webkit-gradient(linear, left top, left bottom, from(#3e779d), to(#65a9d7));
+			background: -webkit-linear-gradient(top, #3e779d, #65a9d7);
+			background: -moz-linear-gradient(top, #3e779d, #65a9d7);
+			background: -ms-linear-gradient(top, #3e779d, #65a9d7);
+			background: -o-linear-gradient(top, #3e779d, #65a9d7);
+			padding: 12px 24px;
+			-webkit-border-radius: 10px;
+			-moz-border-radius: 10px;
+			border-radius: 10px;
+			-webkit-box-shadow: rgba(0,0,0,1) 0 1px 0;
+			-moz-box-shadow: rgba(0,0,0,1) 0 1px 0;
+			box-shadow: rgba(0,0,0,1) 0 1px 0;
+			text-shadow: rgba(0,0,0,.4) 0 1px 0;
+			color: white;
+			font-size: 17px;
+			/*font-family: Helvetica, Arial, Sans-Serif;*/
+			text-decoration: none;
+			vertical-align: middle;
+		}
+		.boton:hover {
+			border-top-color: #28597a;
+			background: #28597a;
+			color: #ccc;
+		}
+		.boton:active {
+			border-top-color: #1b435e;
+			background: #1b435e;
+		}
+		</style>
+	</head>
+	<body>
+		<div id="mapa"></div>
+		<div id="cargando">Cargando...</div>
+
+		<div id="botonera">
+			<button id="localizame" class="boton">Centros UTPL</button>
+		</div>
+
+<script>
+//;$(function() {
+var mapa = L.map('mapa', {attributionControl:false}).setView([-4, -79.25], 5);
+L.tileLayer('http://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+	maxZoom: 18
+}).addTo(mapa);
+
+var centros = L.geoCsv (null, {
+	firstLineTitles: true, 
+	fieldSeparator: ';',
+	onEachFeature: function (feature, layer) {
+	   var popup = '';
+	   console.log('entra')
+		for (var clave in feature.properties) {
+			var title = centros.getPropertyTitle(clave);	
+				console.log(title)
+				//if(title == "CENTRO"){
+					popup += '<b>'+title+'</b><br />'+feature.properties[clave]+'<br /><br />';	
+				//}
+				//if(title == "CAMPUS"){
+					//popup += '<b>'+title+'</b><br /><a href="'+feature.properties[clave]+'" target = "_blank">'+feature.properties[clave]+'</a><br /><br />';	
+				//}
+		}
+		layer.bindPopup(popup); 
+	  },
+});
+/*var bankias = L.geoCsv(null, {
+	onEachFeature: function (feature, layer) {
+		var popup = '';
+		for (var clave in feature.properties) {
+			var title = bankias.getPropertyTitle(clave);
+			popup += '<b>'+title+'</b><br />'+feature.properties[clave]+'<br /><br />';
+			if(feature.properties[clave] === 'RESUMEN'){
+				popup = feature.properties[clave];
+			}
+		}
+		layer.bindPopup(popup);
+	},
+	pointToLayer: function (feature, latlng) {
+		return L.marker(latlng, {
+			icon:L.icon({
+				iconUrl: 'blue.png',
+				shadowUrl: 'blue.png',
+				iconSize: [25,41],
+				shadowSize:   [41, 41],
+				shadowAnchor: [13, 20]
+			})
+		});
+	},
+	firstLineTitles: true
+});
+*/
+
+function processData(allText) {
+    var allTextLines = allText.split(/\r\n|\n/);
+    var headers = allTextLines[0].split(';');
+    var lines = [];
+
+    for (var i=1; i<allTextLines.length; i++) {
+        var data = allTextLines[i].split(';');
+        if (data.length == headers.length) {
+
+            var tarr = [];
+            for (var j=0; j<headers.length; j++) {
+                tarr.push(headers[j]+":"+data[j]);
+            }
+            lines.push(tarr);
+        }
+    }
+    //alert(lines);
+    return lines;
+}
+
+
+function readCSVFile(response) {
+    var lines = response.split("\n");
+    var total = []
+    for (var i = 1; i < lines.length; i++) {
+       var arrg = []
+       var lat = lines[i].split(";")[5];
+       //console.log(">>>>>"+lines[i].split(";")[8])
+       lat =  Number(lat,"")
+       var lng = lines[i].split(";")[6];
+       lng = Number(lng,"")
+       var freq = lines[i].split(";")[7];
+       freq = Number(freq,"")
+       arrg.push(lat)
+       arrg.push(lng)
+       arrg.push(freq)
+       if(!isNaN(lat) && !isNaN(lng) && !isNaN(freq)) {
+       		for (var j = 0; j < freq; j++) {
+       			total.push(arrg)
+       		}
+   		}
+    }
+    return total
+};
+
+$.ajax ({
+	type:'GET',
+	dataType:'text',
+	url:'centros_oct15_feb16.csv',
+   error: function() {
+     alert('No se pudieron cargar los datos');
+   },
+	success: function(csv) {
+      /*var cluster = new L.MarkerClusterGroup();
+		bankias.addData(csv);
+		cluster.addLayer(bankias);
+		mapa.addLayer(cluster);
+		mapa.fitBounds(cluster.getBounds());*/
+		centros.addData(csv);
+    	mapa.addLayer(centros);
+    	puntos = readCSVFile(csv)
+    	console.log(puntos.length)
+		var heat = L.heatLayer(puntos, {blur: 40, radius: 25}).addTo(mapa);
+
+	},
+   complete: function() {
+      $('#cargando').delay(500).fadeOut('slow');
+   }
+});
+
+
+//});
+</script>
+
+	</body>
+</html>
